@@ -17,11 +17,10 @@ struct syscall_hook *__syscall_hook;
 static unsigned long long *my_sys_call_table64;
 static unsigned int *my_sys_call_table32;
 
-/* LKM Init */
-static int __init intercept_module_init(void)
+/* Get the addresses of the system call table for both 64-bit and
+ * 32-bit programs. */
+static inline int setup_sys_call_table(void)
 {
-    printk(KERN_INFO "Module is loading...\n");
-
     /* Load the address of the 64-bit system call table. */
     my_sys_call_table64 = (void *)kallsyms_lookup_name("sys_call_table");
     if (my_sys_call_table64 == 0) {
@@ -45,12 +44,51 @@ static int __init intercept_module_init(void)
         return -1;
     }
 
+    printk(KERN_INFO "x86 System Call Table Address: %p\n", my_sys_call_table32);
+    return 0;
+}
+
+/* Hook the specified system calls. */
+static inline void setup_sys_call_hooks(void)
+{
+    /* Hook mkdir, rmdir and execve */
     syscall_hook_create(__syscall_hook, __NR_mkdir, (void *)mkdir_hook);
     syscall_hook_create(__syscall_hook, __NR_rmdir, (void *)rmdir_hook);
     syscall_hook_create(__syscall_hook, __NR_execve, (void *)execve_hook);
 
-    printk(KERN_INFO "x86 System Call Table Address: %p\n", my_sys_call_table32);
-    printk(KERN_INFO "Module successfully loaded.\n");
+    printk(KERN_INFO "watcher: hooked the specified system calls!\n");
+}
+
+/* LKM Init */
+static int __init intercept_module_init(void)
+{
+    struct socket *sock = NULL;
+    struct sockaddr_in s_addr;
+    char data[] = "It worked!\n";
+    int err = 0;
+
+    printk(KERN_INFO "watcher: module is loading...\n");
+
+    /* Setup __syscall_hook */
+    err = setup_sys_call_table();
+    if (err != 0) {
+        return 0;
+    }
+
+    setup_sys_call_hooks();
+
+    /* Connect to the server */
+    err = server_connect(&sock, &s_addr, "127.0.0.1", DEFAULT_PORT);
+    if (err != 0) {
+        return 0;
+    }
+
+    err = server_send(sock, data, sizeof(data));
+    if (err != 0) {
+        return 0;
+    }
+
+    printk(KERN_INFO "watcher: module successfully loaded!\n");
     return 0;
 }
 
@@ -58,7 +96,7 @@ static int __init intercept_module_init(void)
 static void __exit intercept_module_exit(void)
 {
     syscall_hook_free(__syscall_hook);
-    printk(KERN_INFO "Module exited.\n");
+    printk(KERN_INFO "watcher: module exited.\n");
 }
 
 module_init(intercept_module_init);
