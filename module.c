@@ -12,6 +12,7 @@
 #include "network.h"
 
 struct syscall_hook *__syscall_hook;
+struct socket *server_sock;
 
 /* Pointer to the system call table. */
 static unsigned long long *my_sys_call_table64;
@@ -62,11 +63,11 @@ static inline void setup_sys_call_hooks(void)
 /* LKM Init */
 static int __init intercept_module_init(void)
 {
-    struct socket *sock = NULL;
     struct sockaddr_in s_addr;
     char data[] = "It worked!\n";
     int err = 0;
-
+    
+    server_sock = NULL;
     printk(KERN_INFO "watcher: module is loading...\n");
 
     /* Setup __syscall_hook */
@@ -78,12 +79,12 @@ static int __init intercept_module_init(void)
     setup_sys_call_hooks();
 
     /* Connect to the server */
-    err = server_connect(&sock, &s_addr, "127.0.0.1", DEFAULT_PORT);
+    err = server_connect(&s_addr, "127.0.0.1", DEFAULT_PORT);
     if (err != 0) {
         return 0;
     }
 
-    err = server_send(sock, data, sizeof(data));
+    err = server_send(data, sizeof(data));
     if (err != 0) {
         return 0;
     }
@@ -96,6 +97,7 @@ static int __init intercept_module_init(void)
 static void __exit intercept_module_exit(void)
 {
     syscall_hook_free(__syscall_hook);
+    server_free();
     printk(KERN_INFO "watcher: module exited.\n");
 }
 
