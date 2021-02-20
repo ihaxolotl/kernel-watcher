@@ -11,6 +11,8 @@
 #define DEFAULT_BUFFER_SIZE 1024
 #define DEFAULT_PORT 8888
 
+extern struct socket *server_sock; 
+
 /* Connect to a remote server from the kernel. */
 int server_connect(struct sockaddr_in *s_addr, const char *host, const int port);
 

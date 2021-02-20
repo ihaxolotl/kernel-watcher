@@ -7,6 +7,9 @@
 
 #include <linux/syscalls.h>
 #include <linux/version.h>
+#include "../network.h"
+
+extern struct syscall_hook *__syscall_hook;
 
 /* Check for an updated kernel. */
     #if defined(CONFIG_X86_64) && (LINUX_VERSION_CODE >= KERNEL_VERSION(4,17,0))

@@ -9,8 +9,6 @@
 
 #include "network.h"
 
-extern struct socket *server_sock; 
-
 /* Connect to a remote server from the kernel. */
 int server_connect(
         struct sockaddr_in *s_addr,
@@ -69,9 +67,7 @@ int server_send(char *send_buffer, size_t buff_len) {
     if (ret < 0) {
         printk(KERN_EMERG "watcher: could not send buffer over socket!\n");
         return ret;
-    } else if (ret != DEFAULT_BUFFER_SIZE){
-        printk(KERN_ERR "watcher: bytes sent did not equal the buffer size!\n");
-    }
+    } 
 
     printk("watcher: sent data successfully!\n");
     return 0;

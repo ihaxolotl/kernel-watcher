@@ -8,8 +8,6 @@
 #include "registered_hooks.h"
 #include "syscall_hook.h"
 
-extern struct syscall_hook *__syscall_hook;
-
 #ifdef PTREGS_SYSCALL_STUBS
 /* mkdir system call hook via ptregs. */
 asmlinkage int mkdir_hook(const struct pt_regs *regs)
