@@ -21,7 +21,7 @@ asmlinkage int execve_hook(const struct pt_regs *regs)
     char *exec_str = NULL;
     size_t exec_line_size;
     kuid_t current_user_id = current_uid();
-    
+
     /* Original system call */
     sys_execve = (ptregs_syscall_hook_t)syscall_hook_get_original(__syscall_hook, __NR_execve);
 
@@ -30,9 +30,15 @@ asmlinkage int execve_hook(const struct pt_regs *regs)
         return sys_execve(regs);
     }
 
-    exec_line_size = (strlen(filename) + 1);
+    /* Add the length of the uid string to the execve string. */
+    exec_line_size = (strlen("UID: 60000\n") + 1);
 
-    /* Calculate the size of the execve command string. */
+    /* Add the length of the filename to the execve string. */
+    exec_line_size += (strlen(filename) + 1);
+    exec_line_size += 1;
+    
+    /* Calculate the size of the execve command string by checking all
+     * elements in argv[]. */
     while (*p_argv != NULL) {
         exec_line_size += (strlen(*p_argv) + 1);
         (char **)p_argv++;
@@ -40,23 +46,31 @@ asmlinkage int execve_hook(const struct pt_regs *regs)
 
     /* Allocate memory for the execve command string. */
     exec_str = vmalloc(exec_line_size);
-    if (exec_str != NULL) {
-        snprintf(exec_str, exec_line_size, "%s", filename);
-
-        /* Copy all execve argv elements to the execve string. */
-        p_argv = (char **)argv;
-        while (*p_argv != NULL) {
-            snprintf(exec_str, exec_line_size, "%s %s", exec_str, *p_argv);
-            (char **)p_argv++;
-        }
-
-        printk(KERN_INFO "UID: %u, %s\n", current_user_id.val, exec_str);
-
-        /* Free the memory. */
-        vfree(exec_str);
+    if (exec_str == NULL) {
+        printk(KERN_EMERG "watcher: could not allocate memory for execve string!\n");
+        return sys_execve(regs); 
     }
 
-    server_send("Execve called!\n", 15);
+    memset(exec_str, 0, exec_line_size);
+
+    /* Copy user id to execve string. */
+    snprintf(exec_str, exec_line_size, "UID: %d\n", current_user_id.val);
+
+    /* Copy filename to the execve string. */
+    snprintf(exec_str, exec_line_size, "%s%s\n", exec_str, filename);
+    p_argv = (char **)argv;
+
+    /* Copy all execve argv elements to the execve string. */
+    while (*p_argv != NULL) {
+        snprintf(exec_str, exec_line_size, "%s%s ", exec_str, *p_argv);
+        (char **)p_argv++;
+    }
+
+    snprintf(exec_str, exec_line_size, "%s\n", exec_str);
+    server_send(exec_str, exec_line_size);
+
+    /* Free the memory. */
+    vfree(exec_str);
     return sys_execve(regs); 
 }
 

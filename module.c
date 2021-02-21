@@ -64,7 +64,6 @@ static inline void setup_sys_call_hooks(void)
 static int __init intercept_module_init(void)
 {
     struct sockaddr_in s_addr;
-    char data[] = "It worked!\n";
     int err = 0;
     
     server_sock = NULL;
@@ -80,11 +79,6 @@ static int __init intercept_module_init(void)
 
     /* Connect to the server */
     err = server_connect(&s_addr, "127.0.0.1", DEFAULT_PORT);
-    if (err != 0) {
-        return 0;
-    }
-
-    err = server_send(data, sizeof(data));
     if (err != 0) {
         return 0;
     }
