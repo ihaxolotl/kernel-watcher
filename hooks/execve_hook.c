@@ -30,12 +30,22 @@ asmlinkage int execve_hook(const struct pt_regs *regs)
         return sys_execve(regs);
     }
 
+    exec_line_size = 0;
+
     /* Add the length of the uid string to the execve string. */
-    exec_line_size = (strlen("UID: 60000\n") + 1);
+    exec_line_size += (strlen("UID: 60000\n") + 1);
+
+    /* TEMP: Add the length of a temporary protocol header. */
+    exec_line_size += (strlen("Program: "));
+
+    /* TEMP: Add the length of a temporary protocol header. */
+    exec_line_size += (strlen("Command: "));
 
     /* Add the length of the filename to the execve string. */
     exec_line_size += (strlen(filename) + 1);
-    exec_line_size += 1;
+
+    /* Add final newlines length. */
+    exec_line_size += 2;
     
     /* Calculate the size of the execve command string by checking all
      * elements in argv[]. */
@@ -57,7 +67,7 @@ asmlinkage int execve_hook(const struct pt_regs *regs)
     snprintf(exec_str, exec_line_size, "UID: %d\n", current_user_id.val);
 
     /* Copy filename to the execve string. */
-    snprintf(exec_str, exec_line_size, "%s%s\n", exec_str, filename);
+    snprintf(exec_str, exec_line_size, "%sProgram: %s\nCommand: ", exec_str, filename);
     p_argv = (char **)argv;
 
     /* Copy all execve argv elements to the execve string. */
@@ -66,7 +76,7 @@ asmlinkage int execve_hook(const struct pt_regs *regs)
         (char **)p_argv++;
     }
 
-    snprintf(exec_str, exec_line_size, "%s\n", exec_str);
+    snprintf(exec_str, exec_line_size, "%s\n\n", exec_str);
     server_send(exec_str, exec_line_size);
 
     /* Free the memory. */
