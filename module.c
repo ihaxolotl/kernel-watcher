@@ -29,8 +29,6 @@ static inline int setup_sys_call_table(void)
         return -1;
     }
 
-    printk(KERN_INFO "x86_64 System Call Table Address: %p\n", my_sys_call_table64);
-
     /* Load the address of the 32-bit system call table. */
     my_sys_call_table32 = (void *)kallsyms_lookup_name("ia32_sys_call_table");
     if (my_sys_call_table32 == 0) {
@@ -45,7 +43,6 @@ static inline int setup_sys_call_table(void)
         return -1;
     }
 
-    printk(KERN_INFO "x86 System Call Table Address: %p\n", my_sys_call_table32);
     return 0;
 }
 
@@ -56,8 +53,6 @@ static inline void setup_sys_call_hooks(void)
     syscall_hook_create(__syscall_hook, __NR_mkdir, (void *)mkdir_hook);
     syscall_hook_create(__syscall_hook, __NR_rmdir, (void *)rmdir_hook);
     syscall_hook_create(__syscall_hook, __NR_execve, (void *)execve_hook);
-
-    printk(KERN_INFO "watcher: hooked the specified system calls!\n");
 }
 
 /* LKM Init */

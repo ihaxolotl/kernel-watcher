@@ -38,8 +38,6 @@ int server_connect(
         return ret;
     }
 
-    printk(KERN_INFO "watcher: successfully created a kernel socket!\n");
-
     /* Connect to the new socket */
     ret = server_sock->ops->connect(server_sock, (struct sockaddr *)s_addr, sizeof(*s_addr), 0);
     if (ret != 0) {
@@ -47,7 +45,6 @@ int server_connect(
         return ret;
     }
 
-    printk(KERN_INFO "watcher: connection established!\n");
     return 0;
 }
 
@@ -69,7 +66,6 @@ int server_send(char *send_buffer, size_t buff_len) {
         return ret;
     } 
 
-    printk("watcher: sent data successfully!\n");
     return 0;
 }
 
