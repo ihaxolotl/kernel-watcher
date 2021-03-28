@@ -31,7 +31,7 @@ Every program that gets executed fires off numerous system calls.
 Some system calls are much simpler to hook and may also be called a lot less than others.
 
 For example, read() and write() are incredibly common while reboot() or mount() may be called more sparingly.
-Percautions need to be taken, since functions called inside system call hooks can cause recursive interception.
+Precautions need to be taken, since functions called inside system call hooks can cause recursive interception.
 There are ways to prevent this, but I didn't really care to.
 
 The mkdir() and rmdir() system calls are very easy to intercept, given the fact that they only have one string argument.
