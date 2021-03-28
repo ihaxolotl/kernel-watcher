@@ -24,7 +24,7 @@ In kernel versions 4.17.0 and higher, arguments to system calls are passed as an
 This struct has pointers to general purpose registers used in system calls.
 
 In kernel versions prior to 4.17.0, arguments are passed directly to each function that handles system calls.
-Analogous to how we invoke system calls with prototypes defined in <unistd.h>.
+This is analogous to how we invoke system calls with prototypes defined in <unistd.h>.
 
 ### System Calls
 Every program that gets executed fires off numerous system calls.
